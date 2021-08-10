@@ -19,10 +19,12 @@ def migrate(migrator, database, fake=False, **kwargs):
     @migrator.create_model
     class TemplateRowsDB(Model):
         id = AutoField()
-        created = DateTimeField(constraints=[SQL('DEFAULT now()')])
         template = ForeignKeyField(
-            backref='template_rows_set', column_name='id_template', field='id', model=migrator.orm['template_query'],
-            null=True
+            backref='template_rows_set',
+            column_name='template_id',
+            field='id',
+            model=migrator.orm['template_query'],
+            null=True,
         )
         text = TextField(null=False)
         symbols = IntegerField(null=False)
@@ -53,7 +55,11 @@ def migrate(migrator, database, fake=False, **kwargs):
         id = AutoField()
         created = DateTimeField(constraints=[SQL('DEFAULT now()')])
         template = ForeignKeyField(
-            backref='text_query_set', column_name='id_template', field='id', model=migrator.orm['template_query'], null=True
+            backref='text_query_set',
+            column_name='template_id',
+            field='id',
+            model=migrator.orm['template_query'],
+            null=True,
         )
         name = TextField(null=False)
         text = TextField(null=True)
@@ -66,7 +72,7 @@ def migrate(migrator, database, fake=False, **kwargs):
         id = AutoField()
         created = DateTimeField(constraints=[SQL('DEFAULT now()')])
         query = ForeignKeyField(
-            backref='text_history_set', column_name='id_query', field='id', model=migrator.orm['text_query'], null=False
+            backref='text_history_set', column_name='query_id', field='id', model=migrator.orm['text_query'], null=False
         )
         next = TextField(null=True)
         liner = TextField(null=True)

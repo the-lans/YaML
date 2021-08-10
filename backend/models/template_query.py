@@ -45,6 +45,16 @@ class TemplateRowsDB(BaseDBModel):
         default='No style',
     )
 
+    @property
+    async def dict(self):
+        return {
+            'id': self.id,
+            'template_id': self.template_id,
+            'text': self.text,
+            'symbols': self.symbols,
+            'text_type': self.text_type,
+        }
+
     class Meta:
         table_name = 'template_rows'
 
