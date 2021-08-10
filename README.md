@@ -42,16 +42,17 @@
 
 ## **Конечные точки**
 
-| №    | Конечная точка         | Тип  | Параметры                        | Response             | Описание                              |
-| ---- | ---------------------- | ---- | -------------------------------- | -------------------- | ------------------------------------- |
-| 1    | api/text/new           | GET  | name: str                        | QueryDB              | Новый запрос (статья)                 |
-| 2    | api/text/next/{id}     | GET  | text: str, next: str, liner: str | text: str, next: str | Генерация следующего куска текста     |
-| 3    | api/text/update/{id}   | GET  | text: str                        | text: str, next: str | Обновление существующего куска текста |
-| 4    | api/template/new       | POST | name: str, file/json             | QueryTemplateDB      | Добавление шаблона                    |
-| 5    | api/template/list      | GET  |                                  | QueryTemplateDB      | Список шаблонов                       |
-| 6    | api/template/{id}      | GET  |                                  | QueryTemplateDB      | Получение шаблона                     |
-| 7    | api/text/generate/{id} | GET  |                                  | QueryDB              | Генерация текста по шаблону           |
-|      |                        |      |                                  |                      |                                       |
+| №    | Конечная точка         | Тип  | Параметры                                        | Response             | Описание                              |
+| ---- | ---------------------- | ---- | ------------------------------------------------ | -------------------- | ------------------------------------- |
+| 1    | api/text/new           | GET  | name: str                                        | QueryDB              | Новый запрос (статья)                 |
+| 2    | api/text/next/{id}     | GET  | text: str, next: str, liner: str, text_type: str | text: str, next: str | Генерация следующего куска текста     |
+| 3    | api/text/update/{id}   | GET  | text: str, liner: str, text_type: str            | text: str, next: str | Обновление существующего куска текста |
+| 4    | api/text/finish/{id}   | GET  | text: str, next: str, liner: str                 | text: str            | Завершение запроса                    |
+| 5    | api/template/new       | POST | name: str, file/json                             | QueryTemplateDB      | Добавление шаблона                    |
+| 6    | api/template/list      | GET  |                                                  | QueryTemplateDB      | Список шаблонов                       |
+| 7    | api/template/{id}      | GET  |                                                  | QueryTemplateDB      | Получение шаблона                     |
+| 8    | api/text/generate/{id} | GET  |                                                  | QueryDB              | Генерация текста по шаблону           |
+|      |                        |      |                                                  |                      |                                       |
 
   
 
@@ -97,7 +98,7 @@ Model: TemplateRowsDB
 | Поле        | Тип  | Описание                                 |
 | ----------- | ---- | ---------------------------------------- |
 | id          | int  | Идентификатор записи                     |
-| id_template | int  | Шаблон                                   |
+| template_id | int  | Шаблон                                   |
 | text        | str  | Автоподводка                             |
 | symbols     | int  | Количество символов для генерации текста |
 | text_type   | int  | Тип текста                               |
@@ -113,7 +114,7 @@ Model: QueryDB
 | ----------- | -------- | ----------------------- |
 | id          | int      | Идентификатор запроса   |
 | created     | datetime | Дата создания           |
-| id_template | int      | Шаблон для создания     |
+| template_id | int      | Шаблон для создания     |
 | name        | str      | Имя конкретного запроса |
 | text        | str      | Сгенерированный текст   |
 |             |          |                         |
@@ -128,7 +129,7 @@ Model: TextHistoryDB
 | --------- | -------- | -------------------------------------- |
 | id        | int      | Идентификатор записи                   |
 | created   | datetime | Дата создания записи                   |
-| id_query  | int      | Запрос                                 |
+| query_id  | int      | Запрос                                 |
 | next      | str      | Сгенерированный текст на текущем шаге  |
 | liner     | str      | Подводка                               |
 | prod      | bool     | Текст используется в итоговом варианте |

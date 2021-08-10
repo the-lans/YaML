@@ -3,6 +3,7 @@
 
 from peewee import SQL, Model, AutoField, DateTimeField, TextField, BooleanField, IntegerField, ForeignKeyField
 from backend.db.fields import OptionsField
+from backend.db.types import TEXT_TYPES
 
 
 def migrate(migrator, database, fake=False, **kwargs):
@@ -28,24 +29,7 @@ def migrate(migrator, database, fake=False, **kwargs):
         )
         text = TextField(null=False)
         symbols = IntegerField(null=False)
-        text_type = OptionsField(
-            [
-                'No style',
-                'Conspiracy theories',
-                'TV-reports',
-                'Toast',
-                'Boy quotes',
-                'Advertising slogans',
-                'Short stories',
-                'Instagram signatures',
-                'Wikipedia',
-                'Movie synopsis',
-                'Horoscope',
-                'Folk wisdom',
-                'Garage',
-            ],
-            default='No style',
-        )
+        text_type = OptionsField(TEXT_TYPES, default='No style')
 
         class Meta:
             table_name = 'template_rows'
@@ -77,24 +61,7 @@ def migrate(migrator, database, fake=False, **kwargs):
         next = TextField(null=True)
         liner = TextField(null=True)
         prod = BooleanField(default=False)
-        text_type = OptionsField(
-            [
-                'No style',
-                'Conspiracy theories',
-                'TV-reports',
-                'Toast',
-                'Boy quotes',
-                'Advertising slogans',
-                'Short stories',
-                'Instagram signatures',
-                'Wikipedia',
-                'Movie synopsis',
-                'Horoscope',
-                'Folk wisdom',
-                'Garage',
-            ],
-            default='No style',
-        )
+        text_type = OptionsField(TEXT_TYPES, default='No style')
 
         class Meta:
             table_name = 'text_history'

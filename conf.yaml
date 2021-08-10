@@ -3,6 +3,10 @@ SECRET_KEY: "e0d7fc931d76f1e2a7006e30d7a4c7273a4d95f2e56496f61bcb72be5ae7ec11"
 ALGORITHM: "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: 1440
 
+API_YALM:
+  ADRESS: "https://zeapi.yandex.net"
+  POINT: "/lab/api/yalm/text3"
+
 DB:
   DOMAIN: "127.0.0.1"
   NAME: "yaml"

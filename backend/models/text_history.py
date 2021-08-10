@@ -4,6 +4,7 @@ from backend.models.base import BaseItem
 from backend.db.base import BaseDBItem
 from backend.db.fields import OptionsField
 from backend.models.text_query import QueryDB
+from backend.db.types import TEXT_TYPES
 
 
 class TextHistoryDB(BaseDBItem):
@@ -11,24 +12,19 @@ class TextHistoryDB(BaseDBItem):
     next = TextField(null=True)
     liner = TextField(null=True)
     prod = BooleanField(default=False)
-    text_type = OptionsField(
-        [
-            'No style',
-            'Conspiracy theories',
-            'TV-reports',
-            'Toast',
-            'Boy quotes',
-            'Advertising slogans',
-            'Short stories',
-            'Instagram signatures',
-            'Wikipedia',
-            'Movie synopsis',
-            'Horoscope',
-            'Folk wisdom',
-            'Garage',
-        ],
-        default='No style',
-    )
+    text_type = OptionsField(TEXT_TYPES, default='No style')
+
+    @property
+    async def dict(self):
+        return {
+            'id': self.id,
+            'created': self.created,
+            'query_id': self.query_id,
+            'next': self.next,
+            'liner': self.liner,
+            'prod': self.prod,
+            'text_type': self.text_type,
+        }
 
     class Meta:
         table_name = 'text_history'

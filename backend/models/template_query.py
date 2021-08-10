@@ -3,6 +3,7 @@ from peewee import TextField, IntegerField, ForeignKeyField
 from backend.models.base import BaseItem
 from backend.db.base import BaseDBModel, BaseDBItem
 from backend.db.fields import OptionsField
+from backend.db.types import TEXT_TYPES
 
 
 class QueryTemplateDB(BaseDBItem):
@@ -26,24 +27,7 @@ class TemplateRowsDB(BaseDBModel):
     template = ForeignKeyField(QueryTemplateDB, null=True)
     text = TextField(null=False)
     symbols = IntegerField(null=False)
-    text_type = OptionsField(
-        [
-            'No style',
-            'Conspiracy theories',
-            'TV-reports',
-            'Toast',
-            'Boy quotes',
-            'Advertising slogans',
-            'Short stories',
-            'Instagram signatures',
-            'Wikipedia',
-            'Movie synopsis',
-            'Horoscope',
-            'Folk wisdom',
-            'Garage',
-        ],
-        default='No style',
-    )
+    text_type = OptionsField(TEXT_TYPES, default='No style')
 
     @property
     async def dict(self):
