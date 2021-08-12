@@ -7,6 +7,8 @@ import json
 from os.path import splitext
 from urllib.parse import urljoin
 import aiohttp
+from datetime import timedelta
+import time
 
 from backend.app import app
 from backend.models.template_query import QueryTemplate, TemplateRows, QueryTemplateDB, TemplateRowsDB
@@ -14,8 +16,9 @@ from backend.models.text_query import TextQuery, QueryDB
 from backend.models.text_history import TextHistory, TextHistoryDB
 from backend.api.base import BaseAppAuth
 from backend.db.base import manager
-from backend.db.types import TEXT_TYPES
+from backend.db.types import TEXT_TYPES, ModelTextTypes
 from backend.config import API_YALM
+from backend.library.transform_text import REPL_LIST, STRIP_CHARS, replacer
 
 
 router = InferringRouter()
@@ -46,7 +49,7 @@ class TextApp(BaseAppAuth):
     @classmethod
     async def get_json_hash(cls, content):
         data = await cls.json_loads(content)
-        sdata = await cls.json_dumps(data).encode()
+        sdata = (await cls.json_dumps(data)).encode()
         return sha256(sdata).hexdigest()
 
     @staticmethod
@@ -102,7 +105,9 @@ class TextApp(BaseAppAuth):
         return await QueryDB.update_or_create(item, ret={"success": True})
 
     @staticmethod
-    async def text_generate_query(query: str, text_type: str):
+    async def text_generate_query(query: str, text_type: Optional[str] = None):
+        if text_type is None:
+            text_type = 'No style'
         async with aiohttp.ClientSession(headers={'Content-Type': "application/json"}) as sess:
             qdata = await TextApp.json_dumps({'query': query, 'intro': TEXT_TYPES.index(text_type), 'filter': 1})
             async with sess.post(urljoin(API_YALM['ADRESS'], API_YALM['POINT']), data=qdata) as resp:
@@ -111,15 +116,33 @@ class TextApp(BaseAppAuth):
 
     @classmethod
     async def text_generate_db(
-        cls, item_id: int, name: Optional[str], text_full: str, text_next: str, liner: str, text_type: str
+        cls,
+        item_id: int,
+        name: Optional[str],
+        text_full: Optional[str],
+        text_next: Optional[str],
+        liner: Optional[str],
+        text_type: Optional[str],
+        ret: Optional[dict] = None,
     ):
+        if text_next is None:
+            text_next = ""
+        if liner is None:
+            liner = ""
+        if text_type is None:
+            text_type = 'No style'
+        if ret is None:
+            ret = {"success": True}
+
         obj_query = await cls.get_query_id(item_id)
+
         if obj_query is None:
             res_query = await QueryDB.update_or_create({'name': name, 'text': text_full}, ret={"success": True})
         else:
-            res_query = await QueryDB.update_or_create({'text': text_full}, obj_query, ret={"success": True})
+            res_query = await QueryDB.update_or_create({'text': text_full}, obj_query, ret=ret)
             his = TextHistory(query_id=item_id, next=text_next, liner=liner, text_type=text_type, prod=False)
             res_his = await TextHistoryDB.update_or_create(his, ret={"success": True})
+        return res_query
 
     @classmethod
     async def text_generate_update(
@@ -128,45 +151,64 @@ class TextApp(BaseAppAuth):
         next_gen = await cls.text_generate_query(text_sum, text_type)
         if next_gen is None:
             return {"success": False}
-        text_full = f"{text_sum} {next_gen}"
-        await cls.text_generate_db(item_id, None, text_full, "", liner, text_type)
+        text_full = await cls.joinner([text_sum, next_gen])
+        await cls.text_generate_db(item_id, None, text_full, text_next, liner, text_type)
         return {"success": True, "text": text_sum, "next": next_gen}
 
     @router.get("/api/text/next/{item_id}", tags=["Text"])
     async def get_text_next(
-        self, item_id: int, text: str = "", text_next: str = "", liner: str = "", text_type: str = 'No style'
+        self, item_id: int, text: str = "", text_next: str = "", liner: str = "", text_type: ModelTextTypes = 'No style'
     ):
-        text_sum = f"{text} {text_next} {liner}"
-        return await self.text_generate_update(item_id, text_sum, text_next, liner, text_type)
+        start_time = time.monotonic()
+        text_sum = await self.joinner([text, text_next, liner])
+        res = await self.text_generate_update(item_id, text_sum, text_next, liner, text_type)
+        res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
+        return res
 
     @router.get("/api/text/update/{item_id}", tags=["Text"])
-    async def get_text_update(self, item_id: int, text: str = "", liner: str = "", text_type: str = 'No style'):
-        return await self.text_generate_update(item_id, text, None, liner, text_type)
+    async def get_text_update(
+        self, item_id: int, text: str = "", text_next: str = "", liner: str = "", text_type: ModelTextTypes = 'No style'
+    ):
+        start_time = time.monotonic()
+        res = await self.text_generate_update(item_id, text, text_next, liner, text_type)
+        res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
+        return res
 
     @router.get("/api/text/finish/{item_id}", tags=["Text"])
     async def get_text_finish(self, item_id: int, text: str = "", text_next: str = "", liner: str = ""):
-        text_full = f"{text} {text_next} {liner}"
+        start_time = time.monotonic()
+        text_full = await self.joinner([text, text_next, liner])
         await self.text_generate_db(item_id, None, text_full, text_next, liner, 'No style')
-        return {"success": True, "text": text_full}
+        return {"success": True, "text": text_full, "time_query": timedelta(seconds=time.monotonic() - start_time)}
+
+    @staticmethod
+    async def joinner(slst: list):
+        text = " ".join([item.lstrip(" ") for item in slst]).strip(" ")
+        text = replacer(text, REPL_LIST, STRIP_CHARS)
+        return text
 
     @router.get("/api/text/generate/{temp_id}", tags=["Text"])
     async def get_text_generate(self, temp_id: int, name: str = ""):
+        start_time = time.monotonic()
         temp = await self.get_template_id(temp_id)
-        item = TextQuery(name=name if name else temp['name'], template_id=temp_id)
-        item_db = await QueryDB.update_or_create(item)
-        item_id = item_db['id']
+        item = TextQuery(name=name if name else temp.name, template_id=temp_id)
+        item_db_dict, item_db = await QueryDB.update_or_create(item, return_obj_db=True)
+        item_id = item_db_dict['id']
         query_rows = await self.get_template_rows(temp_id)
         text_sum = ""
         text_next = ""
+        text_type = None
         for row in query_rows:
-            text_sum = " ".join([text_sum.rstrip(), row.text])
+            text_sum = await self.joinner([text_sum, row.text])
             text_next_acc = ""
             while len(text_next_acc) < row.symbols:
-                res = await self.text_generate_update(item_id, text_sum, text_next, row.text, row.text_type)
-                text_next = res['next']
-                text_next_acc = " ".join([text_next_acc.rstrip(), text_next])
-                text_sum = " ".join([text_sum.rstrip(), text_next])
-        return await QueryDB.update_or_create({'text': text_sum}, item_db, ret={"success": True})
+                res = await self.text_generate_update(item_id, text_sum, text_next, row.text, text_type)
+                text_next, text_type = (res['next'], row.text_type)
+                text_next_acc = await self.joinner([text_next_acc, text_next])
+                text_sum = await self.joinner([text_sum, text_next])
+        res = await self.text_generate_db(item_id, None, text_sum, text_next, None, text_type, ret={"success": True})
+        res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
+        return res
 
 
 app.include_router(router)
