@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
-from fastapi import Depends, UploadFile, File
+from fastapi import Depends, UploadFile, File, Response
 from hashlib import sha256
 import json
 from os.path import splitext
@@ -19,6 +19,7 @@ from backend.db.base import manager
 from backend.db.types import TEXT_TYPES, ModelTextTypes
 from backend.config import API_YALM
 from backend.library.transform_text import REPL_LIST, STRIP_CHARS, replacer
+from backend.api.user import set_response_headers
 
 
 router = InferringRouter()
@@ -55,54 +56,6 @@ class TextApp(BaseAppAuth):
     @staticmethod
     async def get_template_rows(item_id):
         return await manager.execute(TemplateRowsDB.select().where(TemplateRowsDB.template_id == item_id))
-
-    @router.get("/api/template/list", tags=["Template"])
-    async def get_template_list(self):
-        return await self.get_list(QueryTemplateDB)
-
-    @router.get("/api/template/{item_id}", tags=["Template"])
-    async def get_template_item(self, item_id: int):
-        item_db = await self.get_template_id(item_id)
-        res = await self.prepare(item_db)
-        if item_db is not None:
-            res.update(await item_db.dict)
-        query_rows = await self.get_template_rows(item_id)
-        res['items'] = [
-            {'text': item.text, 'symbols': item.symbols, 'text_type': item.text_type} for item in query_rows
-        ]
-        return res
-
-    @router.post("/api/template/new", tags=["Template"])
-    async def post_template_new(
-        self,
-        name: Optional[str] = "",
-        data: UploadFile = File(..., media_type='application/octet-stream'),
-    ):
-        content = await data.read()
-        if not name:
-            name = splitext(data.filename)[0]
-        hash = await self.get_json_hash(content)
-        obj = await self.get_template_hash(hash)
-        if obj is None:
-            item = QueryTemplate(name=name, hash=hash)
-            json_data = await self.json_loads(content)
-            res = await QueryTemplateDB.update_or_create(item, ret={"success": True})
-            for row in json_data['items']:
-                obj = TemplateRows(
-                    template_id=res['id'],
-                    text=row.get('text'),
-                    symbols=row.get('symbols', 300),
-                    text_type=row.get('text_type', 'No style'),
-                )
-                await TemplateRowsDB.update_or_create(obj, ret={"success": True})
-            return res
-        else:
-            return {"success": False}
-
-    @router.get("/api/text/new", tags=["Text"])
-    async def get_text_new(self, name: str):
-        item = TextQuery(name=name)
-        return await QueryDB.update_or_create(item, ret={"success": True})
 
     @staticmethod
     async def text_generate_query(query: str, text_type: Optional[str] = None):
@@ -155,10 +108,80 @@ class TextApp(BaseAppAuth):
         await cls.text_generate_db(item_id, None, text_full, text_next, liner, text_type)
         return {"success": True, "text": text_sum, "next": next_gen}
 
+    @staticmethod
+    async def joinner(slst: list):
+        text = " ".join([item.lstrip(" ") for item in slst]).strip(" ")
+        text = replacer(text, REPL_LIST, STRIP_CHARS)
+        return text
+
+    @classmethod
+    async def response_header(cls, response: Response):
+        await set_response_headers(response)
+
+    @router.get("/api/template/list", tags=["Template"])
+    async def get_template_list(self, response: Response):
+        await self.response_header(response)
+        return await self.get_list(QueryTemplateDB)
+
+    @router.get("/api/template/{item_id}", tags=["Template"])
+    async def get_template_item(self, response: Response, item_id: int):
+        await self.response_header(response)
+        item_db = await self.get_template_id(item_id)
+        res = await self.prepare(item_db)
+        if item_db is not None:
+            res.update(await item_db.dict)
+        query_rows = await self.get_template_rows(item_id)
+        res['items'] = [
+            {'text': item.text, 'symbols': item.symbols, 'text_type': item.text_type} for item in query_rows
+        ]
+        return res
+
+    @router.post("/api/template/new", tags=["Template"])
+    async def post_template_new(
+        self,
+        response: Response,
+        name: Optional[str] = "",
+        data: UploadFile = File(..., media_type='application/octet-stream'),
+    ):
+        await self.response_header(response)
+        content = await data.read()
+        if not name:
+            name = splitext(data.filename)[0]
+        hash = await self.get_json_hash(content)
+        obj = await self.get_template_hash(hash)
+        if obj is None:
+            item = QueryTemplate(name=name, hash=hash)
+            json_data = await self.json_loads(content)
+            res = await QueryTemplateDB.update_or_create(item, ret={"success": True})
+            for row in json_data['items']:
+                obj = TemplateRows(
+                    template_id=res['id'],
+                    text=row.get('text'),
+                    symbols=row.get('symbols', 300),
+                    text_type=row.get('text_type', 'No style'),
+                )
+                await TemplateRowsDB.update_or_create(obj, ret={"success": True})
+            return res
+        else:
+            return {"success": False}
+
+    @router.get("/api/text/new", tags=["Text"])
+    async def get_text_new(self, response: Response, name: str):
+        await self.response_header(response)
+        item = TextQuery(name=name)
+        return await QueryDB.update_or_create(item, ret={"success": True})
+
     @router.get("/api/text/next/{item_id}", tags=["Text"])
     async def get_text_next(
-        self, item_id: int, text: str = "", text_next: str = "", liner: str = "", text_type: ModelTextTypes = 'No style'
+        self,
+        response: Response,
+        item_id: int,
+        text: str = "",
+        text_next: str = "",
+        liner: str = "",
+        text_type: ModelTextTypes = 'No style',
     ):
+        await self.response_header(response)
         start_time = time.monotonic()
         text_sum = await self.joinner([text, text_next, liner])
         res = await self.text_generate_update(item_id, text_sum, text_next, liner, text_type)
@@ -167,28 +190,33 @@ class TextApp(BaseAppAuth):
 
     @router.get("/api/text/update/{item_id}", tags=["Text"])
     async def get_text_update(
-        self, item_id: int, text: str = "", text_next: str = "", liner: str = "", text_type: ModelTextTypes = 'No style'
+        self,
+        response: Response,
+        item_id: int,
+        text: str = "",
+        text_next: str = "",
+        liner: str = "",
+        text_type: ModelTextTypes = 'No style',
     ):
+        await self.response_header(response)
         start_time = time.monotonic()
         res = await self.text_generate_update(item_id, text, text_next, liner, text_type)
         res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
         return res
 
     @router.get("/api/text/finish/{item_id}", tags=["Text"])
-    async def get_text_finish(self, item_id: int, text: str = "", text_next: str = "", liner: str = ""):
+    async def get_text_finish(
+        self, response: Response, item_id: int, text: str = "", text_next: str = "", liner: str = ""
+    ):
+        await self.response_header(response)
         start_time = time.monotonic()
         text_full = await self.joinner([text, text_next, liner])
         await self.text_generate_db(item_id, None, text_full, text_next, liner, 'No style')
         return {"success": True, "text": text_full, "time_query": timedelta(seconds=time.monotonic() - start_time)}
 
-    @staticmethod
-    async def joinner(slst: list):
-        text = " ".join([item.lstrip(" ") for item in slst]).strip(" ")
-        text = replacer(text, REPL_LIST, STRIP_CHARS)
-        return text
-
     @router.get("/api/text/generate/{temp_id}", tags=["Text"])
-    async def get_text_generate(self, temp_id: int, name: str = ""):
+    async def get_text_generate(self, response: Response, temp_id: int, name: str = ""):
+        await self.response_header(response)
         start_time = time.monotonic()
         temp = await self.get_template_id(temp_id)
         item = TextQuery(name=name if name else temp.name, template_id=temp_id)

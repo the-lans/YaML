@@ -1,23 +1,29 @@
 from datetime import timedelta
-from fastapi import Depends, status, HTTPException
+from fastapi import Depends, status, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from backend.app import app
 from backend.models.user import Token, User, UserInDB
 from backend.library.security import authenticate_user, create_access_token, get_current_active_user
-from backend.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.config import ACCESS_TOKEN_EXPIRE_MINUTES, DB_SETTINGS
 from backend.api.base import BaseApp
 from backend.library.security import get_password_hash
 
 
+async def set_response_headers(response: Response):
+    response.headers["Access-Control-Allow-Origin"] = DB_SETTINGS['DOMAIN']
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+
+
 @app.post("/login", response_model=Token, tags=["user"])
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
+    await set_response_headers(response)
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW-Authenticate": "Bearer", "Access-Control-Allow-Origin": "*"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
@@ -25,7 +31,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 
 @app.post("/signup", tags=["user"])
-async def create_user(current_user: User = Depends()):
+async def create_user(response: Response, current_user: User = Depends()):
+    await set_response_headers(response)
     obj = await BaseApp.get_one_object(UserInDB.select().where(UserInDB.username == current_user.username))
     return await UserInDB.update_or_create(current_user, obj)
 
@@ -42,7 +49,8 @@ async def get_hash(password: str):
 
 
 @app.get("/")
-async def get_root():
+async def get_root(response: Response):
+    await set_response_headers(response)
     return {"success": True}
 
 
