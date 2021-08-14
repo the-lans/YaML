@@ -1,0 +1,7 @@
+div.thema, div.text, div.next, div.liner
+{
+	width: 90%; /* Размеры */
+	outline: 2px solid #6699FF; /* Чёрная рамка */
+	/* border: 3px solid #fff;  Белая рамка */
+	border-radius: 5px; /* Радиус скругления */
+}

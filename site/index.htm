@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <title>Text generator</title>
+  <meta charset="UTF-8">
+  <meta name="description" content="Text generator"/>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script type="module" src="src/handlers.js"></script>
+</head>
+<body>
+  <div class="elements">
+	<div id="auth">
+		<form class="form-inline" id="form_user" method="post">
+			<table>
+				<tr>
+				<td>Логин: </td>
+				<td><input type='text' id='login'/></td>
+				<td>Пароль: </td>
+				<td><input type='password' id='password'/></td> 
+				</tr>
+				<tr>
+				<td><button class="login btn" name="login" value="login">Войти</button></td>
+				<td><button class="logout btn" name="logout" value="logout">Выйти</button></td>
+				<td></td>
+				<td></td>
+				</tr>
+			</table>
+		</form>
+	</div>
+	<br/>
+	<div id="generator" style="display: none">
+		<form class="form-inline" id="form_text" method="post">
+			<p>Название:
+				<div id="thema" class="thema"></div>
+			</p>
+			<p>Текст: </p>
+			<div id="text" class="text"></div>
+			<p>Продолжение: </p>
+			<div id="next" class="next"></div>
+			<p>Подводка: </p>
+			<div id="liner" class="liner"></div>
+			<div class="bottons_panel">
+				<button class="text_create btn" name="text_create" value="create">Новый запрос</button>
+				<button class="text_next btn" name="text_next" value="next">Генерация</button>
+				<button class="text_update btn" name="text_update" value="update">Обновить</button>
+				<button class="text_finish btn" name="text_finish" value="finish">Завершить</button>
+			</div>
+			<div id="result" class="result"><p>item_id = </p><p>created = </p></div>
+		</form>
+	</div>
+  </div>
+</body>
+</html>
