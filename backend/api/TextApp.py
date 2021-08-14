@@ -116,7 +116,7 @@ class TextApp(BaseAppAuth):
 
     @classmethod
     async def response_header(cls, response: Response):
-        await set_response_headers(response)
+        return await set_response_headers(response)
 
     @router.get("/api/template/list", tags=["Template"])
     async def get_template_list(self, response: Response):
@@ -240,3 +240,43 @@ class TextApp(BaseAppAuth):
 
 
 app.include_router(router)
+
+
+@app.options("/api/template/list", tags=["Template"])
+async def options_template_list(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/template/{item_id}", tags=["Template"])
+async def options_template_item(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/template/new", tags=["Template"])
+async def options_template_new(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/text/new", tags=["Text"])
+async def options_text_new(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/text/next/{item_id}", tags=["Text"])
+async def options_text_next(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/text/update/{item_id}", tags=["Text"])
+async def options_text_update(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/text/finish/{item_id}", tags=["Text"])
+async def options_text_finish(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/text/generate/{temp_id}", tags=["Text"])
+async def options_text_generate(response: Response):
+    return await TextApp.response_header(response)

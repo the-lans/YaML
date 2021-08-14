@@ -11,8 +11,12 @@ from backend.library.security import get_password_hash
 
 
 async def set_response_headers(response: Response):
-    response.headers["Access-Control-Allow-Origin"] = DB_SETTINGS['DOMAIN']
+    # response.headers["Access-Control-Allow-Origin"] = f"http://{DB_SETTINGS['DOMAIN']}:{DB_SETTINGS['PORT']}"
+    response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT"
+    return {"success": True}
 
 
 @app.post("/login", response_model=Token, tags=["user"])
@@ -52,6 +56,21 @@ async def get_hash(password: str):
 async def get_root(response: Response):
     await set_response_headers(response)
     return {"success": True}
+
+
+@app.options("/login", tags=["user"])
+async def options_login_for_access_token(response: Response):
+    return await set_response_headers(response)
+
+
+@app.options("/signup", tags=["user"])
+async def options_create_user(response: Response):
+    return await set_response_headers(response)
+
+
+@app.options("/")
+async def options_root(response: Response):
+    return await set_response_headers(response)
 
 
 if __name__ == "__main__":
