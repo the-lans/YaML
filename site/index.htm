@@ -26,6 +26,9 @@
 				</tr>
 			</table>
 		</form>
+		<div id="err_auth" style="display: none">
+			<p>Не удалось авторизоваться!</p>
+		</div>
 	</div>
 	<br/>
 	<div id="generator" style="display: none">
@@ -45,7 +48,11 @@
 				<button class="text_update btn" name="text_update" value="update">Обновить</button>
 				<button class="text_finish btn" name="text_finish" value="finish">Завершить</button>
 			</div>
-			<div id="result" class="result"><p>item_id = </p><p>created = </p></div>
+			<div id="result" class="result">
+				<p>item_id = </p>
+				<p>created = </p>
+				<p>time = </p>
+			</div>
 		</form>
 	</div>
   </div>
