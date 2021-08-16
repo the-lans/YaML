@@ -54,8 +54,7 @@ async def get_hash(password: str):
 
 @app.get("/")
 async def get_root(response: Response):
-    await set_response_headers(response)
-    return {"success": True}
+    return await set_response_headers(response)
 
 
 @app.options("/login", tags=["user"])
