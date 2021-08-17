@@ -171,6 +171,19 @@ class TextApp(BaseAppAuth):
         item = TextQuery(name=name)
         return await QueryDB.update_or_create(item, ret={"success": True})
 
+    @router.get("/api/text/{item_id}", tags=["Text"])
+    async def get_text_item(self, response: Response, item_id: int):
+        await self.response_header(response)
+        start_time = time.monotonic()
+        obj_query = await self.get_query_id(item_id)
+        if obj_query is None:
+            res = {"success": False}
+        else:
+            res = {"success": True}
+            res.update(await obj_query.dict)
+        res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
+        return res
+
     @router.get("/api/text/next/{item_id}", tags=["Text"])
     async def get_text_next(
         self,
@@ -184,7 +197,7 @@ class TextApp(BaseAppAuth):
         await self.response_header(response)
         start_time = time.monotonic()
         text_sum = await self.joinner([text, text_next, liner])
-        res = await self.text_generate_update(item_id, text_sum, text_next, liner, text_type)
+        res = await self.text_generate_update(item_id, text_sum, text_next, liner, text_type.value)
         res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
         return res
 
@@ -200,7 +213,7 @@ class TextApp(BaseAppAuth):
     ):
         await self.response_header(response)
         start_time = time.monotonic()
-        res = await self.text_generate_update(item_id, text, text_next, liner, text_type)
+        res = await self.text_generate_update(item_id, text, text_next, liner, text_type.value)
         res['time_query'] = timedelta(seconds=time.monotonic() - start_time)
         return res
 
@@ -259,6 +272,11 @@ async def options_template_new(response: Response):
 
 @app.options("/api/text/new", tags=["Text"])
 async def options_text_new(response: Response):
+    return await TextApp.response_header(response)
+
+
+@app.options("/api/text/{item_id}", tags=["Text"])
+async def options_text_item(response: Response):
     return await TextApp.response_header(response)
 
 
