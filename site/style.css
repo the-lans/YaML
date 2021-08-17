@@ -5,3 +5,33 @@ div.thema, div.text, div.next, div.liner
 	/* border: 3px solid #fff;  Белая рамка */
 	border-radius: 5px; /* Радиус скругления */
 }
+
+select.text_type
+{
+	display: block;
+	width: 100%; /* от ширины блока div */
+	padding: .5rem 2.5rem .5rem 1rem; /* отступы от текста до рамки */
+	background: none; /* убираем фон */
+	outline: 2px solid #6699FF; /* Чёрная рамка */
+	border-radius: 5px; /* Радиус скругления */
+	-webkit-appearance: none; /* Chrome */
+	-moz-appearance: none; /* Firefox */
+	font-family: inherit; /* наследует от родителя */
+	font-size: 1rem;
+	color: #444;
+}
+
+.select:after 
+{
+    content: "";
+    display: block;
+    border-style: solid;
+    border-width: 6px 5px 0 5px;
+    border-color: #000 transparent transparent transparent;
+    pointer-events: none;
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    z-index: 1;
+    margin-top: -3px;
+}

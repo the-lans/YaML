@@ -121,6 +121,20 @@ $(document).ready(function() {
 	if (item_id != null && item_name != null && item_created != null) {
 		document.getElementById("result").innerHTML = get_info(null);
 		editor_thema.commands.setContent(text_to_html(item_name));
+		$.ajax({
+			method: "GET",
+			url: adress_api + "/api/text/" + item_id,
+			contentType: "application/json; charset=utf-8",
+			dataType: "json",
+			crossDomain: true,
+			success: function(res) {
+				console.log(res);
+				if (res.text != null) {
+					editor_text.commands.setContent(text_to_html(res.text));
+				}
+			},
+			error: function(er) {console.log(er);},
+		});
 	}
 	
 	$('button.text_create').click(function(e) {
@@ -159,7 +173,7 @@ $(document).ready(function() {
 				"text": html_to_text(editor_text.getHTML(), false),
 				"text_next": html_to_text(editor_next.getHTML(), false),
 				"liner": html_to_text(editor_liner.getHTML()),
-				"text_type": "No style",
+				"text_type": document.getElementById("text_type").value,
 			},
 			success: function(res) {
 				console.log(res);
@@ -190,7 +204,7 @@ $(document).ready(function() {
 				"text": html_to_text(editor_text.getHTML(), false),
 				"text_next": html_to_text(editor_next.getHTML(), false),
 				"liner": html_to_text(editor_liner.getHTML()),
-				"text_type": "No style",
+				"text_type": document.getElementById("text_type").value,
 			},
 			success: function(res) {
 				console.log(res);
@@ -227,10 +241,10 @@ $(document).ready(function() {
 					editor_text.commands.setContent(text_to_html(res.text));
 					editor_next.commands.setContent("");
 					editor_liner.commands.setContent("");
-					item_id = null; $.removeCookie(item_id);
-					item_created = ""; $.removeCookie(item_created);
-					item_name = null; $.removeCookie(item_name);
-					editor_thema.commands.setContent("");
+					item_id = null; $.removeCookie('item_id');
+					item_created = ""; $.removeCookie('item_created');
+					item_name = null; $.removeCookie('item_name');
+					//editor_thema.commands.setContent("");
 					document.getElementById("result").innerHTML = "";
 				}
 			},
@@ -279,10 +293,12 @@ $(document).ready(function() {
 	
 	$('button.logout').click(function(e) {
 		e.preventDefault();  // Stop form from sending request to server
-		access_token = ""; $.removeCookie(access_token);
-		token_type = "bearer"; $.removeCookie(token_type);
-		item_id = null; $.removeCookie(item_id);
-		item_created = ""; $.removeCookie(item_created);
+		access_token = ""; $.removeCookie('access_token');
+		token_type = "bearer"; $.removeCookie('token_type');
+		item_id = null; $.removeCookie('item_id');
+		item_created = ""; $.removeCookie('item_created');
+		item_name = ""; $.removeCookie('item_name');
+		document.getElementById("result").innerHTML = "";
 		document.getElementById("generator").style.display = 'none';
 		document.getElementById("err_auth").style.display = 'none';
 	});
