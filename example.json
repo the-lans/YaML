@@ -1,6 +1,6 @@
 {
 	"items": [
-	{"text": "текст текст", "symbols": 450, "text_type": "No style"},
+	{"text": "Пример текста", "symbols": 450, "text_type": "No style"},
 	{"text": "\nтекст2", "symbols": 450, "text_type": "Wikipedia"},
 	{"text": "\nтекст3\n"}
 	]

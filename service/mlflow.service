@@ -1,0 +1,15 @@
+[Unit]
+Description=Service for MLFlow server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/mlflow
+ExecStart=/bin/bash -c 'PATH=/root/anaconda3/envs/tf1_env/bin/:$PATH exec mlflow server --host 89.223.66.156 --port 5000 --backend-store-uri postgresql://postgres@127.0.0.1:5432/mlflow --default-artifact-root mlflow'
+TimeoutStartSec=60
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

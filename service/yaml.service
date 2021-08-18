@@ -1,0 +1,15 @@
+[Unit]
+Description=Service for YaML server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/yaml
+ExecStart=/root/anaconda3/envs/tf1_env/bin/uvicorn main:app --reload
+TimeoutStartSec=60
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
