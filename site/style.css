@@ -9,13 +9,13 @@ div.thema, div.text, div.next, div.liner
 select.text_type
 {
 	display: block;
-	width: 100%; /* от ширины блока div */
-	padding: .5rem 2.5rem .5rem 1rem; /* отступы от текста до рамки */
+	/* width: 100%;  от ширины блока div */
+	padding: .25rem 2rem .25rem 1rem; /* отступы от текста до рамки */
 	background: none; /* убираем фон */
 	outline: 2px solid #6699FF; /* Чёрная рамка */
 	border-radius: 5px; /* Радиус скругления */
-	-webkit-appearance: none; /* Chrome */
-	-moz-appearance: none; /* Firefox */
+	/* -webkit-appearance: none; Chrome */
+	/* -moz-appearance: none;  Firefox */
 	font-family: inherit; /* наследует от родителя */
 	font-size: 1rem;
 	color: #444;
