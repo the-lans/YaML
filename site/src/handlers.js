@@ -155,6 +155,9 @@ $(document).ready(function() {
 				item_created = res.created; $.cookie('item_created', item_created);
 				item_name = html_to_text(editor_thema.getHTML()); $.cookie('item_name', item_name);
 				document.getElementById("result").innerHTML = get_info(null);
+				editor_text.commands.setContent("");
+				editor_next.commands.setContent("");
+				editor_liner.commands.setContent("");
 			},
 			error: function(er) {console.log(er);},
 		});
@@ -163,6 +166,10 @@ $(document).ready(function() {
 	$('button.text_next').click(function(e) {
 		e.preventDefault();  // Stop form from sending request to server
 		var btn = $(this);
+		if (item_id == null) {
+			document.getElementById("result").innerHTML = "<p>Нет идентификатора запроса, создайте новый запрос!</p>";
+			return;
+		}
 		$.ajax({
 			method: "GET",
 			url: adress_api + "/api/text/next/" + item_id,
@@ -194,6 +201,10 @@ $(document).ready(function() {
 	$('button.text_update').click(function(e) {
 		e.preventDefault();  // Stop form from sending request to server
 		var btn = $(this);
+		if (item_id == null) {
+			document.getElementById("result").innerHTML = "<p>Нет идентификатора запроса, создайте новый запрос!</p>";
+			return;
+		}
 		$.ajax({
 			method: "GET",
 			url: adress_api + "/api/text/update/" + item_id,
@@ -223,6 +234,10 @@ $(document).ready(function() {
 	$('button.text_finish').click(function(e) {
 		e.preventDefault();  // Stop form from sending request to server
 		var btn = $(this);
+		if (item_id == null) {
+			document.getElementById("result").innerHTML = "<p>Нет идентификатора запроса, создайте новый запрос!</p>";
+			return;
+		}
 		$.ajax({
 			method: "GET",
 			url: adress_api + "/api/text/finish/" + item_id,
@@ -301,5 +316,9 @@ $(document).ready(function() {
 		document.getElementById("result").innerHTML = "";
 		document.getElementById("generator").style.display = 'none';
 		document.getElementById("err_auth").style.display = 'none';
+		editor_text.commands.setContent("");
+		editor_next.commands.setContent("");
+		editor_liner.commands.setContent("");
+		editor_thema.commands.setContent("");
 	});
 });
