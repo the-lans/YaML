@@ -151,9 +151,9 @@ $(document).ready(function() {
 			},
 			success: function(res) {
 				console.log(res);
-				item_id = res.id; $.cookie('item_id', item_id);
-				item_created = res.created; $.cookie('item_created', item_created);
-				item_name = html_to_text(editor_thema.getHTML()); $.cookie('item_name', item_name);
+				item_id = res.id; $.cookie('item_id', item_id, {path: '/;SameSite=Lax'});
+				item_created = res.created; $.cookie('item_created', item_created, {path: '/;SameSite=Lax'});
+				item_name = html_to_text(editor_thema.getHTML()); $.cookie('item_name', item_name, {path: '/;SameSite=Lax'});
 				document.getElementById("result").innerHTML = get_info(null);
 				editor_text.commands.setContent("");
 				editor_next.commands.setContent("");
@@ -290,8 +290,8 @@ $(document).ready(function() {
 				console.log(res);
 				document.getElementById("generator").style.display = 'block';
 				document.getElementById("err_auth").style.display = 'none';
-				access_token = res.access_token; $.cookie('access_token', access_token);
-				token_type = res.token_type; $.cookie('token_type', token_type);
+				access_token = res.access_token; $.cookie('access_token', access_token, {path: '/;SameSite=Lax'});
+				token_type = res.token_type; $.cookie('token_type', token_type, {path: '/;SameSite=Lax'});
 				$.ajaxSetup({
 					headers: { 
 					"Accept": "application/json",
